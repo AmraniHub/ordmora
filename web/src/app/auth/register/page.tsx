@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { User, Phone, MapPin, Home, AtSign, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Home, Lock, ArrowRight, Loader2 } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -12,7 +12,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
-    full_name: '', username: '', phone: '',
+    full_name: '', email: '', phone: '',
     city: '', delivery_address: '', password: '',
   })
 
@@ -23,18 +23,17 @@ export default function RegisterPage() {
     setError('')
     setLoading(true)
     try {
-      // Create auth user
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email: `${form.phone}@ordmora.app`,
+        email: form.email,
         password: form.password,
       })
       if (signUpError) throw signUpError
 
-      // Create profile
+      const username = form.email.split('@')[0]
       const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user!.id,
         full_name: form.full_name,
-        username: form.username,
+        username,
         phone: form.phone,
         city: form.city,
         delivery_address: form.delivery_address,
@@ -52,7 +51,6 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
-        {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold gradient-text">Ordmora</h1>
           <p className="text-[var(--text-muted)] mt-2 text-sm">Créer un compte</p>
@@ -60,7 +58,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="glass rounded-2xl p-6 space-y-4">
           <Field icon={<User size={16} />} placeholder="Nom complet" value={form.full_name} onChange={v => set('full_name', v)} required />
-          <Field icon={<AtSign size={16} />} placeholder="Identifiant" value={form.username} onChange={v => set('username', v)} required />
+          <Field icon={<Mail size={16} />} placeholder="Email" type="email" value={form.email} onChange={v => set('email', v)} required />
           <Field icon={<Phone size={16} />} placeholder="Téléphone" type="tel" value={form.phone} onChange={v => set('phone', v)} required />
           <Field icon={<MapPin size={16} />} placeholder="Ville" value={form.city} onChange={v => set('city', v)} required />
           <Field icon={<Home size={16} />} placeholder="Adresse de livraison" value={form.delivery_address} onChange={v => set('delivery_address', v)} required />
