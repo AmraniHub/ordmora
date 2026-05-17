@@ -42,7 +42,8 @@ export default function RegisterPage() {
 
       router.push('/store')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+      const msg = err instanceof Error ? err.message : JSON.stringify(err)
+      setError(msg)
     } finally {
       setLoading(false)
     }
