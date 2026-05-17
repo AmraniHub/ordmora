@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 export default function ProductCard({ product }: { product: Product }) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   async function handleOrder() {
     setLoading(true)

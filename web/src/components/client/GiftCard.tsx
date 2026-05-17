@@ -12,7 +12,7 @@ export default function GiftCard({ gift, userPoints }: { gift: GiftType; userPoi
   const [success, setSuccess] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const canRedeem = userPoints >= gift.points_required
   const missing = gift.points_required - userPoints
 

@@ -8,7 +8,7 @@ import { Phone, Lock, ArrowRight, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [phone, setPhone] = useState('')

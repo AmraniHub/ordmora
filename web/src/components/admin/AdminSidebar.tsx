@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -22,7 +23,7 @@ const navItems = [
 export default function AdminSidebar({ role, name }: { role: string; name: string }) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   async function handleLogout() {
     await supabase.auth.signOut()

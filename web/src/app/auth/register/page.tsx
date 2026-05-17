@@ -8,7 +8,7 @@ import { User, Phone, MapPin, Home, AtSign, Lock, ArrowRight, Loader2 } from 'lu
 
 export default function RegisterPage() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
