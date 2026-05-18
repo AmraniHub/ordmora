@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import BottomNav from '@/components/client/BottomNav'
 import { CartProvider } from '@/context/CartContext'
@@ -6,8 +5,7 @@ import PageTransition from '@/components/client/PageTransition'
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  await supabase.auth.getUser() // refresh session cookie only
 
   return (
     <CartProvider>
