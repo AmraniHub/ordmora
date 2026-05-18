@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import ProductDetail from '@/components/client/ProductDetail'
 import type { Product } from '@/types'
 
@@ -9,9 +9,9 @@ export default async function ProductDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data: product } = await supabase
+  const { data: product } = await admin
     .from('products')
     .select('*')
     .eq('id', id)
