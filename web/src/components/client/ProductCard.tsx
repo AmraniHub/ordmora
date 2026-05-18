@@ -21,26 +21,30 @@ export default function ProductCard({ product }: { product: Product }) {
       className="rounded-2xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98]"
       style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
     >
-      {/* Image */}
-      <div className="relative aspect-square bg-[var(--bg-card-hover)]">
-        {product.image_url ? (
-          <Image src={product.image_url} alt={product.name} fill className="object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">🧴</div>
-        )}
-        {/* Points badge */}
-        <div
-          className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold points-glow"
-          style={{ background: 'var(--primary)', color: '#fff' }}
-        >
-          <Star size={10} fill="currentColor" />
-          {product.points_value} pts
+      {/* Image + name link */}
+      <a href={'/store/' + product.id} className="block">
+        <div className="relative aspect-square bg-[var(--bg-card-hover)]">
+          {product.image_url ? (
+            <Image src={product.image_url} alt={product.name} fill className="object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-4xl">🧴</div>
+          )}
+          {/* Points badge */}
+          <div
+            className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold points-glow"
+            style={{ background: 'var(--primary)', color: '#fff' }}
+          >
+            <Star size={10} fill="currentColor" />
+            {product.points_value} pts
+          </div>
         </div>
-      </div>
+      </a>
 
       {/* Info */}
       <div className="p-3">
-        <h3 className="font-semibold text-sm leading-tight truncate">{product.name}</h3>
+        <a href={'/store/' + product.id} className="block">
+          <h3 className="font-semibold text-sm leading-tight truncate">{product.name}</h3>
+        </a>
         <p className="text-[var(--accent)] font-bold mt-1">{product.price} DH</p>
 
         <button
