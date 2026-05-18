@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import ProductCard from '@/components/client/ProductCard'
+import StoreHeader from '@/components/client/StoreHeader'
 import type { Product, ProductCategory } from '@/types'
 
 const categories: { key: ProductCategory | 'tous'; label: string }[] = [
@@ -17,6 +18,12 @@ export default async function StorePage({
   const { cat } = await searchParams
   const supabase = await createClient()
 
+  // Fetch user profile for the avatar
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('full_name, points_total').eq('id', user.id).single()
+    : { data: null }
+
   let query = supabase
     .from('products')
     .select('*')
@@ -31,22 +38,13 @@ export default async function StorePage({
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold gradient-text">Nos Produits</h1>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">Achetez et gagnez des points</p>
-        </div>
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-          style={{ background: 'var(--primary)', color: '#fff' }}
-        >
-          O
-        </div>
-      </div>
+      <StoreHeader
+        name={profile?.full_name ?? ''}
+        points={profile?.points_total ?? 0}
+      />
 
       {/* Category filter */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
         {categories.map(({ key, label }) => {
           const active = (cat ?? 'tous') === key
           return (
