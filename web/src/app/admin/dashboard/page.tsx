@@ -66,7 +66,7 @@ export default async function DashboardPage() {
   }
 
   const safeRevenueData = (revenueData ?? []) as { total_amount: number; created_at: string }[]
-  const safeTopItems = (topItems ?? []) as { quantity: number; products: { name: string; price: number } | null }[]
+  const safeTopItems = (topItems ?? []) as unknown as { quantity: number; products: { name: string; price: number } | null }[]
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
