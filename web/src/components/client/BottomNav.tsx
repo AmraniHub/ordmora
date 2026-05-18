@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShoppingBag, ClipboardList, Star, Gift } from 'lucide-react'
+import { ShoppingBag, ClipboardList, Star, Gift, UserCircle } from 'lucide-react'
 
 const tabs = [
   { href: '/store', icon: ShoppingBag, label: 'Boutique' },
   { href: '/orders', icon: ClipboardList, label: 'Commandes' },
   { href: '/wallet', icon: Star, label: 'Points' },
   { href: '/gifts', icon: Gift, label: 'Cadeaux' },
+  { href: '/profile', icon: UserCircle, label: 'Profil' },
 ]
 
 export default function BottomNav() {

@@ -27,7 +27,7 @@ export default async function AdminOrdersPage({
   const { data: orders } = await query
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Commandes</h1>
         <span className="text-sm text-[var(--text-muted)]">{orders?.length ?? 0} résultats</span>
@@ -51,40 +51,78 @@ export default async function AdminOrdersPage({
         ))}
       </div>
 
-      {/* Orders table */}
-      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-        <div
-          className="grid grid-cols-5 gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]"
-          style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}
-        >
-          <span>Commande</span>
-          <span>Client</span>
-          <span>Produits</span>
-          <span>Montant</span>
-          <span>Statut</span>
-        </div>
+      {/* Orders */}
+      <div className="space-y-3">
+        {orders?.map((order: Order) => (
+          <div
+            key={order.id}
+            className="rounded-2xl p-5"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          >
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              {/* Left: order info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <span className="font-bold text-sm">{order.order_number}</span>
+                  <span className="text-xs text-[var(--text-muted)]">
+                    {new Date(order.created_at).toLocaleDateString('fr-FR', {
+                      day: '2-digit', month: 'short', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit',
+                    })}
+                  </span>
+                </div>
 
-        <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
-          {orders?.map((order: Order) => (
-            <div key={order.id} className="grid grid-cols-5 gap-4 px-5 py-4 items-center hover:bg-[var(--bg-card-hover)] transition-colors">
-              <div>
-                <p className="text-sm font-semibold">{order.order_number}</p>
-                <p className="text-xs text-[var(--text-muted)]">
-                  {new Date(order.created_at).toLocaleDateString('fr-FR')}
+                {/* Products */}
+                <p className="text-sm text-[var(--text-muted)] mb-3">
+                  {order.order_items?.map(i => `${i.products?.name ?? '?'} ×${i.quantity}`).join(', ')}
                 </p>
+
+                {/* Client + address — what the delivery person needs */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="rounded-xl px-3 py-2" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Client</p>
+                    <p className="text-sm font-semibold">{order.profiles?.full_name ?? '—'}</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-2" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Téléphone</p>
+                    <a
+                      href={`tel:${order.profiles?.phone}`}
+                      className="text-sm font-semibold"
+                      style={{ color: 'var(--primary-light)' }}
+                    >
+                      {order.profiles?.phone ?? '—'}
+                    </a>
+                  </div>
+                  <div className="rounded-xl px-3 py-2" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Adresse de livraison</p>
+                    <p className="text-sm font-semibold">{order.delivery_address || '—'}</p>
+                  </div>
+                </div>
+
+                {order.notes && (
+                  <div className="mt-2 rounded-xl px-3 py-2" style={{ background: 'var(--warning)10', border: '1px solid var(--warning)30' }}>
+                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Note client</p>
+                    <p className="text-sm">{order.notes}</p>
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="text-sm">{order.profiles?.full_name ?? '—'}</p>
-                <p className="text-xs text-[var(--text-muted)]">{order.profiles?.phone}</p>
+
+              {/* Right: amount + status */}
+              <div className="flex flex-col items-end gap-3 shrink-0">
+                <p className="text-xl font-black" style={{ color: 'var(--accent)' }}>
+                  {order.total_amount} DH
+                </p>
+                <OrderStatusUpdater
+                  orderId={order.id}
+                  currentStatus={order.status}
+                  clientPhone={order.profiles?.phone ?? ''}
+                  clientName={order.profiles?.full_name ?? ''}
+                  orderNumber={order.order_number}
+                />
               </div>
-              <div className="text-xs text-[var(--text-muted)]">
-                {order.order_items?.map(i => i.products?.name).join(', ')}
-              </div>
-              <p className="text-sm font-bold" style={{ color: 'var(--accent)' }}>{order.total_amount} DH</p>
-              <OrderStatusUpdater orderId={order.id} currentStatus={order.status} />
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       {(!orders || orders.length === 0) && (

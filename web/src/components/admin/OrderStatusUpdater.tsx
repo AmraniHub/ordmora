@@ -23,14 +23,20 @@ const colors: Record<OrderStatus, string> = {
 export default function OrderStatusUpdater({
   orderId,
   currentStatus,
+  clientPhone = '',
+  clientName = '',
+  orderNumber = '',
 }: {
   orderId: string
   currentStatus: OrderStatus
+  clientPhone?: string
+  clientName?: string
+  orderNumber?: string
 }) {
   const [status, setStatus] = useState<OrderStatus>(currentStatus)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   async function handleChange(newStatus: OrderStatus) {
     if (newStatus === status) return
@@ -38,6 +44,16 @@ export default function OrderStatusUpdater({
     try {
       await supabase.from('orders').update({ status: newStatus }).eq('id', orderId)
       setStatus(newStatus)
+
+      // Fire WhatsApp notification (best-effort, don't block on failure)
+      if (clientPhone) {
+        fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: clientPhone, name: clientName, orderNumber, status: newStatus }),
+        }).catch(() => {})
+      }
+
       router.refresh()
     } finally {
       setSaving(false)

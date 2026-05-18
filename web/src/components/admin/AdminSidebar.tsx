@@ -16,7 +16,8 @@ const navItems = [
   { href: '/admin/clients',   icon: Users,            label: 'Clients',          roles: ['admin', 'manager'] },
   { href: '/admin/products',  icon: Package,          label: 'Produits',         roles: ['admin', 'manager'] },
   { href: '/admin/points',    icon: Star,             label: 'Points',           roles: ['admin', 'manager'] },
-  { href: '/admin/gifts',     icon: Gift,             label: 'Cadeaux',          roles: ['admin', 'manager'] },
+  { href: '/admin/gifts',              icon: Gift,             label: 'Cadeaux',          roles: ['admin', 'manager'] },
+  { href: '/admin/gifts/redemptions', icon: Gift,             label: 'Rachats cadeaux',  roles: ['admin', 'manager'] },
   { href: '/admin/settings',  icon: Settings,         label: 'Paramètres',       roles: ['admin'] },
 ]
 

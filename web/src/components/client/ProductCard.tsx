@@ -2,54 +2,18 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { ShoppingCart, Star, Loader2 } from 'lucide-react'
+import { ShoppingCart, Star, Check } from 'lucide-react'
 import type { Product } from '@/types'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useCart } from '@/context/CartContext'
 
 export default function ProductCard({ product }: { product: Product }) {
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const [supabase] = useState(() => createClient())
+  const { addItem } = useCart()
+  const [added, setAdded] = useState(false)
 
-  async function handleOrder() {
-    setLoading(true)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/auth/login'); return }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('delivery_address')
-        .eq('id', user.id)
-        .single()
-
-      const { data: order, error } = await supabase
-        .from('orders')
-        .insert({
-          client_id: user.id,
-          total_amount: product.price,
-          delivery_address: profile?.delivery_address ?? '',
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      await supabase.from('order_items').insert({
-        order_id: order.id,
-        product_id: product.id,
-        quantity: 1,
-        unit_price: product.price,
-        points_earned: product.points_value,
-      })
-
-      router.push(`/orders`)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
+  function handleAddToCart() {
+    addItem(product)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1500)
   }
 
   return (
@@ -80,21 +44,24 @@ export default function ProductCard({ product }: { product: Product }) {
         <p className="text-[var(--accent)] font-bold mt-1">{product.price} DH</p>
 
         <button
-          onClick={handleOrder}
-          disabled={loading || product.stock === 0}
+          onClick={handleAddToCart}
+          disabled={product.stock === 0}
           className="w-full mt-2 h-9 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
           style={{
-            background: product.stock === 0 ? 'var(--border)' : 'var(--primary)',
+            background: product.stock === 0
+              ? 'var(--border)'
+              : added
+              ? 'var(--success)'
+              : 'var(--primary)',
             color: product.stock === 0 ? 'var(--text-muted)' : '#fff',
-            opacity: loading ? 0.7 : 1,
           }}
         >
-          {loading ? (
-            <Loader2 size={14} className="animate-spin" />
-          ) : product.stock === 0 ? (
+          {product.stock === 0 ? (
             'Rupture de stock'
+          ) : added ? (
+            <><Check size={14} /> Ajouté !</>
           ) : (
-            <><ShoppingCart size={14} /> Commander</>
+            <><ShoppingCart size={14} /> Ajouter au panier</>
           )}
         </button>
       </div>

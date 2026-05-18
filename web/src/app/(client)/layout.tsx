@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import BottomNav from '@/components/client/BottomNav'
+import { CartProvider } from '@/context/CartContext'
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -8,9 +9,11 @@ export default async function ClientLayout({ children }: { children: React.React
   if (!user) redirect('/auth/login')
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ paddingBottom: '72px' }}>
-      <main className="flex-1">{children}</main>
-      <BottomNav />
-    </div>
+    <CartProvider>
+      <div className="min-h-screen flex flex-col" style={{ paddingBottom: '72px' }}>
+        <main className="flex-1">{children}</main>
+        <BottomNav />
+      </div>
+    </CartProvider>
   )
 }
