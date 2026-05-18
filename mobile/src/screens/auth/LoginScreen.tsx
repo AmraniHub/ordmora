@@ -7,23 +7,20 @@ import { supabase } from '../../lib/supabase'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 
 export default function LoginScreen({ navigation }: { navigation: any }) {
-  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleLogin() {
-    if (!phone || !password) { setError('Remplissez tous les champs'); return }
+    if (!email || !password) { setError('Remplissez tous les champs'); return }
     setError('')
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: `${phone}@ordmora.app`,
-        password,
-      })
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
     } catch {
-      setError('Téléphone ou mot de passe incorrect')
+      setError('Email ou mot de passe incorrect')
     } finally {
       setLoading(false)
     }
@@ -32,7 +29,6 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-        {/* Logo */}
         <View style={styles.logoContainer}>
           <Text style={styles.logo}>Ordmora</Text>
           <Text style={styles.subtitle}>Connexion à votre compte</Text>
@@ -40,15 +36,16 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
 
         <View style={styles.form}>
           <View style={styles.inputRow}>
-            <Text style={styles.inputIcon}>📱</Text>
+            <Text style={styles.inputIcon}>📧</Text>
             <TextInput
               style={styles.input}
-              placeholder="Téléphone"
+              placeholder="Email"
               placeholderTextColor={colors.textMuted}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
 

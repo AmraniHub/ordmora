@@ -7,19 +7,19 @@ import { supabase } from '../../lib/supabase'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 
 const fields = [
-  { key: 'full_name',         label: 'Nom complet',          icon: '👤', keyboard: 'default' as const },
-  { key: 'username',          label: 'Identifiant',           icon: '🔤', keyboard: 'default' as const },
-  { key: 'phone',             label: 'Téléphone',             icon: '📱', keyboard: 'phone-pad' as const },
-  { key: 'city',              label: 'Ville',                 icon: '📍', keyboard: 'default' as const },
-  { key: 'delivery_address',  label: 'Adresse de livraison',  icon: '🏠', keyboard: 'default' as const },
-  { key: 'password',          label: 'Mot de passe',          icon: '🔒', keyboard: 'default' as const, secure: true },
+  { key: 'full_name',        label: 'Nom complet',         icon: '👤', keyboard: 'default'      as const },
+  { key: 'email',            label: 'Email',                icon: '📧', keyboard: 'email-address' as const },
+  { key: 'phone',            label: 'Téléphone',            icon: '📱', keyboard: 'phone-pad'    as const },
+  { key: 'city',             label: 'Ville',                icon: '📍', keyboard: 'default'      as const },
+  { key: 'delivery_address', label: 'Adresse de livraison', icon: '🏠', keyboard: 'default'      as const },
+  { key: 'password',         label: 'Mot de passe',         icon: '🔒', keyboard: 'default'      as const, secure: true },
 ]
 
 type FormState = Record<string, string>
 
 export default function RegisterScreen({ navigation }: { navigation: any }) {
   const [form, setForm] = useState<FormState>({
-    full_name: '', username: '', phone: '',
+    full_name: '', email: '', phone: '',
     city: '', delivery_address: '', password: '',
   })
   const [loading, setLoading] = useState(false)
@@ -34,7 +34,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
     setLoading(true)
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email: `${form.phone}@ordmora.app`,
+        email: form.email,
         password: form.password,
       })
       if (signUpError) throw signUpError
@@ -42,7 +42,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
       const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user!.id,
         full_name: form.full_name,
-        username: form.username,
+        username: form.email.split('@')[0],
         phone: form.phone,
         city: form.city,
         delivery_address: form.delivery_address,
@@ -75,6 +75,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
                 keyboardType={f.keyboard}
                 secureTextEntry={f.secure}
                 autoCapitalize="none"
+                autoCorrect={false}
               />
             </View>
           ))}
