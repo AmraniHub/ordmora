@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import OrdersRealtime from '@/components/client/OrdersRealtime'
+import LoginPrompt from '@/components/client/LoginPrompt'
 import type { Order } from '@/types'
 
 export default async function OrdersPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) return <LoginPrompt message="Connectez-vous pour voir vos commandes" />
 
   const { data: orders } = await supabase
     .from('orders')

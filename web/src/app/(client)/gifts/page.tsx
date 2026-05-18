@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import GiftCard from '@/components/client/GiftCard'
+import LoginPrompt from '@/components/client/LoginPrompt'
 import type { Gift } from '@/types'
 
 export default async function GiftsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) return <LoginPrompt message="Connectez-vous pour échanger vos points contre des cadeaux" />
 
   const [profileRes, giftsRes] = await Promise.all([
     supabase.from('profiles').select('points_total').eq('id', user.id).single(),

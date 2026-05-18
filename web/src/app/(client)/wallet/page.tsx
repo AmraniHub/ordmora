@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { Star, TrendingUp, TrendingDown, RotateCcw } from 'lucide-react'
+import LoginPrompt from '@/components/client/LoginPrompt'
 import type { WalletTransaction } from '@/types'
 import WalletCard from '@/components/client/WalletCard'
 
@@ -14,7 +14,7 @@ const typeConfig = {
 export default async function WalletPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) return <LoginPrompt message="Connectez-vous pour voir vos points" />
 
   const [profileRes, txRes] = await Promise.all([
     supabase.from('profiles').select('full_name, points_total').eq('id', user.id).single(),
