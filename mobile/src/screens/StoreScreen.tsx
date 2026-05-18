@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   View, Text, FlatList, TouchableOpacity, Image,
-  StyleSheet, ActivityIndicator, RefreshControl, ScrollView,
+  StyleSheet, ActivityIndicator, RefreshControl, ScrollView, Alert,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import type { Product, ProductCategory } from '../types'
@@ -18,6 +19,7 @@ const categories: { key: Category; label: string }[] = [
 
 export default function StoreScreen() {
   const { profile } = useAuth()
+  const insets = useSafeAreaInsets()
   const [products, setProducts] = useState<Product[]>([])
   const [cat, setCat] = useState<Category>('tous')
   const [loading, setLoading] = useState(true)
@@ -36,24 +38,46 @@ export default function StoreScreen() {
     fetchProducts().finally(() => setLoading(false))
   }, [fetchProducts])
 
-  async function handleOrder(product: Product) {
+  async function placeOrder(product: Product) {
     if (!profile) return
     setOrdering(product.id)
     try {
-      const { data: order } = await supabase
+      const { data: order, error } = await supabase
         .from('orders')
         .insert({ client_id: profile.id, total_amount: product.price, delivery_address: profile.delivery_address })
-        .select().single()
+        .select()
+        .single()
+
+      if (error) throw error
 
       if (order) {
         await supabase.from('order_items').insert({
           order_id: order.id, product_id: product.id,
           quantity: 1, unit_price: product.price, points_earned: product.points_value,
         })
+        Alert.alert(
+          '✅ Commande passée !',
+          `Votre commande de "${product.name}" a été enregistrée.\nVous gagnez ⭐ ${product.points_value} points à la livraison.`,
+          [{ text: 'OK' }]
+        )
       }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de passer la commande. Réessayez.')
     } finally {
       setOrdering(null)
     }
+  }
+
+  function handleOrder(product: Product) {
+    if (!profile) return
+    Alert.alert(
+      'Confirmer la commande',
+      `Commander "${product.name}" pour ${product.price} DH ?\n\nLivraison à : ${profile.delivery_address || 'Adresse non définie'}`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Commander', style: 'default', onPress: () => placeOrder(product) },
+      ]
+    )
   }
 
   const onRefresh = async () => {
@@ -92,7 +116,7 @@ export default function StoreScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <View>
           <Text style={styles.headerTitle}>Nos Produits</Text>
           <Text style={styles.headerSub}>Achetez et gagnez des points</Text>
@@ -125,7 +149,7 @@ export default function StoreScreen() {
           renderItem={renderProduct}
           numColumns={2}
           columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100 }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.empty}>
@@ -141,7 +165,7 @@ export default function StoreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing['2xl'], paddingTop: 56, paddingBottom: spacing.lg },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing['2xl'], paddingBottom: spacing.lg },
   headerTitle: { fontSize: 24, fontWeight: '800', color: colors.primaryLight },
   headerSub: { ...typography.small, marginTop: 2 },
   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
@@ -152,7 +176,7 @@ const styles = StyleSheet.create({
   catBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   catLabel: { fontSize: 13, fontWeight: '500', color: colors.textMuted },
   catLabelActive: { color: colors.white },
-  list: { padding: spacing.lg, paddingTop: spacing.md },
+  list: { padding: spacing.lg, paddingTop: spacing.md, paddingBottom: 100 },
   row: { gap: spacing.md },
   card: { flex: 1, backgroundColor: colors.bgCard, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, marginBottom: spacing.md },
   imageContainer: { aspectRatio: 1, backgroundColor: colors.bgCardHover, alignItems: 'center', justifyContent: 'center' },

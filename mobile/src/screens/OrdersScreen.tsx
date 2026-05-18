@@ -1,5 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native'
+import {
+  View, Text, FlatList, StyleSheet, ActivityIndicator,
+  RefreshControl, TouchableOpacity, Alert,
+} from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import type { Order } from '../types'
@@ -14,9 +18,11 @@ const statusConfig = {
 
 export default function OrdersScreen() {
   const { profile } = useAuth()
+  const insets = useSafeAreaInsets()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [cancelling, setCancelling] = useState<string | null>(null)
 
   const fetchOrders = useCallback(async () => {
     if (!profile) return
@@ -28,10 +34,36 @@ export default function OrdersScreen() {
     setOrders(data ?? [])
   }, [profile])
 
+  // Initial load
   useEffect(() => {
     setLoading(true)
     fetchOrders().finally(() => setLoading(false))
   }, [fetchOrders])
+
+  // Realtime subscription — live status updates without pull-to-refresh
+  useEffect(() => {
+    if (!profile) return
+
+    const channel = supabase
+      .channel('mobile-orders-' + profile.id)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: 'client_id=eq.' + profile.id,
+        },
+        (payload) => {
+          setOrders(prev =>
+            prev.map(o => o.id === payload.new.id ? { ...o, ...payload.new } : o)
+          )
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [profile])
 
   const onRefresh = async () => {
     setRefreshing(true)
@@ -39,12 +71,37 @@ export default function OrdersScreen() {
     setRefreshing(false)
   }
 
+  async function handleCancel(order: Order) {
+    Alert.alert(
+      'Annuler la commande',
+      `Annuler ${order.order_number} ?`,
+      [
+        { text: 'Non', style: 'cancel' },
+        {
+          text: 'Oui, annuler', style: 'destructive',
+          onPress: async () => {
+            setCancelling(order.id)
+            // Optimistic update
+            setOrders(prev =>
+              prev.map(o => o.id === order.id ? { ...o, status: 'annulee' as const } : o)
+            )
+            await supabase.from('orders').update({ status: 'annulee' }).eq('id', order.id)
+            setCancelling(null)
+          },
+        },
+      ]
+    )
+  }
+
   const renderOrder = ({ item }: { item: Order }) => {
     const cfg = statusConfig[item.status]
+    const isCancelling = cancelling === item.id
+
     return (
       <View style={styles.card}>
+        {/* Header */}
         <View style={styles.cardHeader}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.orderNum}>{item.order_number}</Text>
             <Text style={styles.orderDate}>
               {new Date(item.created_at).toLocaleDateString('fr-FR', {
@@ -53,14 +110,33 @@ export default function OrdersScreen() {
               })}
             </Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: `${cfg.color}20` }]}>
-            <Text>{cfg.icon}</Text>
-            <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
+
+          <View style={styles.headerRight}>
+            {/* Status badge */}
+            <View style={[styles.statusBadge, { backgroundColor: cfg.color + '20' }]}>
+              <Text>{cfg.icon}</Text>
+              <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
+            </View>
+
+            {/* Cancel — only when pending */}
+            {item.status === 'en_attente' && (
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => handleCancel(item)}
+                disabled={isCancelling}
+                activeOpacity={0.8}
+              >
+                {isCancelling
+                  ? <ActivityIndicator color={colors.danger} size="small" />
+                  : <Text style={styles.cancelBtnText}>✕ Annuler</Text>}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
         <View style={styles.divider} />
 
+        {/* Items */}
         {item.order_items?.map(oi => (
           <View key={oi.id} style={styles.itemRow}>
             <Text style={styles.itemName}>{oi.products?.name ?? 'Produit'}</Text>
@@ -69,6 +145,7 @@ export default function OrdersScreen() {
         ))}
 
         <View style={styles.divider} />
+
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalAmount}>{item.total_amount} DH</Text>
@@ -85,7 +162,7 @@ export default function OrdersScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Mes Commandes</Text>
+      <Text style={[styles.title, { paddingTop: insets.top + 16 }]}>Mes Commandes</Text>
 
       {loading ? (
         <ActivityIndicator style={{ flex: 1 }} color={colors.primary} size="large" />
@@ -94,12 +171,13 @@ export default function OrdersScreen() {
           data={orders}
           keyExtractor={i => i.id}
           renderItem={renderOrder}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100 }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyIcon}>📦</Text>
               <Text style={styles.emptyText}>Aucune commande</Text>
+              <Text style={styles.emptySubText}>Commandez un produit dans la boutique</Text>
             </View>
           }
         />
@@ -110,14 +188,30 @@ export default function OrdersScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  title: { ...typography.h1, paddingHorizontal: spacing['2xl'], paddingTop: 56, paddingBottom: spacing.lg },
-  list: { paddingHorizontal: spacing['2xl'], paddingBottom: 100 },
-  card: { backgroundColor: colors.bgCard, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.md },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  title: { ...typography.h1, paddingHorizontal: spacing['2xl'], paddingBottom: spacing.lg },
+  list: { paddingHorizontal: spacing['2xl'] },
+  card: {
+    backgroundColor: colors.bgCard, borderRadius: radius.xl,
+    borderWidth: 1, borderColor: colors.border,
+    padding: spacing.lg, marginBottom: spacing.md,
+  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
+  headerLeft: { flex: 1 },
+  headerRight: { alignItems: 'flex-end', gap: spacing.sm },
   orderNum: { ...typography.body, fontWeight: '700' },
   orderDate: { ...typography.small, marginTop: 2 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 4 },
+  statusBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 4,
+  },
   statusText: { fontSize: 11, fontWeight: '600' },
+  cancelBtn: {
+    backgroundColor: colors.danger + '15',
+    borderWidth: 1, borderColor: colors.danger + '40',
+    borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 4,
+    minWidth: 80, alignItems: 'center',
+  },
+  cancelBtnText: { color: colors.danger, fontSize: 11, fontWeight: '600' },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.md },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   itemName: { ...typography.small, color: colors.textMuted, fontSize: 13 },
@@ -125,9 +219,13 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { ...typography.small },
   totalAmount: { color: colors.accent, fontWeight: '700', fontSize: 16 },
-  pointsEarned: { marginTop: spacing.md, backgroundColor: `${colors.success}15`, borderRadius: radius.md, padding: spacing.sm },
+  pointsEarned: {
+    marginTop: spacing.md, backgroundColor: colors.success + '15',
+    borderRadius: radius.md, padding: spacing.sm,
+  },
   pointsEarnedText: { color: colors.success, fontSize: 12, fontWeight: '600', textAlign: 'center' },
   empty: { alignItems: 'center', paddingTop: 80 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: { ...typography.body, color: colors.textMuted },
+  emptyText: { ...typography.body, fontWeight: '600', marginBottom: 4 },
+  emptySubText: { ...typography.small, textAlign: 'center' },
 })

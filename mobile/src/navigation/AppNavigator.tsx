@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Text, View } from 'react-native'
 import { useAuth } from '../context/AuthContext'
-import { colors, radius } from '../constants/theme'
+import { colors } from '../constants/theme'
 
 import LoginScreen from '../screens/auth/LoginScreen'
 import RegisterScreen from '../screens/auth/RegisterScreen'
@@ -11,6 +11,7 @@ import StoreScreen from '../screens/StoreScreen'
 import OrdersScreen from '../screens/OrdersScreen'
 import WalletScreen from '../screens/WalletScreen'
 import GiftsScreen from '../screens/GiftsScreen'
+import ProfileScreen from '../screens/ProfileScreen'
 
 const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -20,6 +21,7 @@ const tabIcons: Record<string, string> = {
   Orders: '📋',
   Wallet: '⭐',
   Gifts: '🎁',
+  Profile: '👤',
 }
 
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
@@ -49,10 +51,11 @@ function ClientTabs() {
         tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
       })}
     >
-      <Tab.Screen name="Store" component={StoreScreen} options={{ title: 'Boutique' }} />
-      <Tab.Screen name="Orders" component={OrdersScreen} options={{ title: 'Commandes' }} />
-      <Tab.Screen name="Wallet" component={WalletScreen} options={{ title: 'Points' }} />
-      <Tab.Screen name="Gifts" component={GiftsScreen} options={{ title: 'Cadeaux' }} />
+      <Tab.Screen name="Store"   component={StoreScreen}   options={{ title: 'Boutique' }} />
+      <Tab.Screen name="Orders"  component={OrdersScreen}  options={{ title: 'Commandes' }} />
+      <Tab.Screen name="Wallet"  component={WalletScreen}  options={{ title: 'Points' }} />
+      <Tab.Screen name="Gifts"   component={GiftsScreen}   options={{ title: 'Cadeaux' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
     </Tab.Navigator>
   )
 }
