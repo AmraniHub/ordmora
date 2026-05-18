@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Star, TrendingUp, TrendingDown, RotateCcw } from 'lucide-react'
 import type { WalletTransaction } from '@/types'
+import WalletCard from '@/components/client/WalletCard'
 
 const typeConfig = {
   earned:   { icon: TrendingUp,   color: 'var(--success)', label: 'Gagné',   sign: '+' },
@@ -39,35 +40,11 @@ export default async function WalletPage() {
       <h1 className="text-2xl font-bold mb-6">Mon Wallet</h1>
 
       {/* Points card */}
-      <div
-        className="rounded-3xl p-6 mb-6 relative overflow-hidden points-glow"
-        style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #4F46E5 100%)' }}
-      >
-        {/* Decorative circles */}
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20" style={{ background: '#fff' }} />
-        <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full opacity-10" style={{ background: '#fff' }} />
-
-        <p className="text-white/70 text-sm font-medium mb-1">Mes points</p>
-        <div className="flex items-end gap-2">
-          <span className="text-6xl font-black text-white tabular-nums">
-            {profile?.points_total ?? 0}
-          </span>
-          <div className="mb-2 flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5">
-            <Star size={12} fill="white" className="text-white" />
-            <span className="text-white text-xs font-semibold">pts</span>
-          </div>
-        </div>
-        <p className="text-white/60 text-xs mt-1">{profile?.full_name}</p>
-
-        {soonExpiring > 0 && (
-          <div className="mt-3 bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2">
-            <span className="text-lg">⚠️</span>
-            <p className="text-white text-xs">
-              <strong>{soonExpiring} points</strong> expirent dans moins de 30 jours
-            </p>
-          </div>
-        )}
-      </div>
+      <WalletCard
+        points={profile?.points_total ?? 0}
+        name={profile?.full_name ?? ''}
+        soonExpiring={soonExpiring}
+      />
 
       {/* History */}
       <div className="mb-2 flex items-center justify-between">

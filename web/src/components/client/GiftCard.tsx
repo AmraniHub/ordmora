@@ -6,6 +6,8 @@ import { Gift, Lock, Loader2, Star } from 'lucide-react'
 import type { Gift as GiftType } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { motion } from 'motion/react'
+import Confetti from '@/components/client/Confetti'
 
 export default function GiftCard({ gift, userPoints }: { gift: GiftType; userPoints: number }) {
   const [loading, setLoading] = useState(false)
@@ -43,14 +45,18 @@ export default function GiftCard({ gift, userPoints }: { gift: GiftType; userPoi
 
   if (success) {
     return (
-      <div
-        className="rounded-2xl p-4 flex flex-col items-center justify-center gap-2 text-center animate-fade-in"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+        className="rounded-2xl p-4 flex flex-col items-center justify-center gap-2 text-center relative overflow-hidden"
         style={{ background: 'var(--success)20', border: '1px solid var(--success)' }}
       >
+        <Confetti />
         <span className="text-3xl">🎉</span>
         <p className="text-sm font-semibold text-[var(--success)]">Cadeau échangé!</p>
         <p className="text-xs text-[var(--text-muted)]">L'admin vous contactera bientôt</p>
-      </div>
+      </motion.div>
     )
   }
 

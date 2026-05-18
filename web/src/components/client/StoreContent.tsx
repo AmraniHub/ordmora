@@ -4,6 +4,17 @@ import { useState } from 'react'
 import { Search } from 'lucide-react'
 import ProductCard from '@/components/client/ProductCard'
 import type { Product, ProductCategory } from '@/types'
+import { motion } from 'motion/react'
+
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+}
 
 const categories: { key: ProductCategory | 'tous'; label: string }[] = [
   { key: 'tous',        label: 'Tous' },
@@ -67,11 +78,18 @@ export default function StoreContent({ products, initialCat }: Props) {
 
       {/* Products grid */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3">
+        <motion.div
+          className="grid grid-cols-2 gap-3"
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+        >
           {filtered.map((p: Product) => (
-            <ProductCard key={p.id} product={p} />
+            <motion.div key={p.id} variants={itemVariants}>
+              <ProductCard product={p} />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       ) : (
         <div className="text-center py-20 text-[var(--text-muted)]">
           <p className="text-4xl mb-3">🛍️</p>

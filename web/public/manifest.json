@@ -1,0 +1,58 @@
+{
+  "name": "Ordmora",
+  "short_name": "Ordmora",
+  "description": "Commandez en ligne, payez à la livraison. Gagnez des points et échangez-les contre des cadeaux.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#7C3AED",
+  "orientation": "portrait-primary",
+  "categories": ["shopping", "lifestyle"],
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Boutique Ordmora"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Boutique",
+      "url": "/store",
+      "description": "Voir les produits"
+    },
+    {
+      "name": "Mes commandes",
+      "url": "/orders",
+      "description": "Suivre mes commandes"
+    },
+    {
+      "name": "Mon wallet",
+      "url": "/wallet",
+      "description": "Voir mes points"
+    }
+  ]
+}
